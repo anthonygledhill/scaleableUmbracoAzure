@@ -209,7 +209,74 @@
                 "name": "[parameters('appName')]",
                 "serverFarmId": "[concat('/subscriptions/', subscription().subscriptionId,'/resourcegroups/',resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('appServicePlanName'))]",
                 "hostingEnvironment": ""
-            }
+            },
+            "resources": [
+                {
+                    "apiVersion": "2014-06-01",
+                    "name": "MSDeploy",
+                    "type": "Extensions",
+                    "dependsOn": [
+                        "[concat('Microsoft.Web/Sites/', parameters('appName'))]",
+                        "[concat('Microsoft.Web/Sites/', parameters('appName'), '/config/web')]",
+                        "[concat('Microsoft.Sql/servers/', parameters('dbServerName'), '/databases/', parameters('dbName'))]",
+                        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+                    ],
+                    "properties": {
+                        "packageUri": "https://auxmktplceprod.blob.core.windows.net/packages/ScalableUmbracoCms.WebPI.7.4.3.zip",
+                        "dbType": "SQL",
+                        "connectionString": "[concat('Data Source=tcp:', reference(concat('Microsoft.Sql/servers/', parameters('dbServerName'))).fullyQualifiedDomainName, ',1433;Initial Catalog=', parameters('dbName'), ';User Id=', parameters('dbAdministratorLogin'), '@', parameters('dbServerName'), ';Password=', parameters('dbAdministratorLoginPassword'), ';')]",
+                        "setParameters": {
+                            "Application Path": "[parameters('appName')]",
+                            "Database Server": "[reference(concat('Microsoft.Sql/servers/', parameters('dbServerName'))).fullyQualifiedDomainName]",
+                            "Database Name": "[parameters('dbName')]",
+                            "Database Username": "[parameters('nonAdminDatabaseUsername')]",
+                            "Database Password": "[parameters('nonAdminDatabasePassword')]",
+                            "Database Administrator": "[parameters('dbAdministratorLogin')]",
+                            "Database Administrator Password": "[parameters('dbAdministratorLoginPassword')]",
+                            "azurestoragerootUrl": "[concat('https://',variables('storageAccountName'), '.blob.core.windows.net')]",
+                            "azurestoragecontainerName": "media",
+                            "azurestorageconnectionString": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'), ';AccountKey=' , listKeys(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), '2015-05-01-preview').key1 )]",
+                            "rediscachehost": "[concat(parameters('redisCacheName'), '.redis.cache.windows.net')]",
+                            "rediscacheport": "6379",
+                            "rediscacheaccessKey": "[listKeys(resourceId('Microsoft.Cache/Redis', parameters('redisCacheName')), '2014-04-01').primaryKey]",
+                            "azurestoragecacheControl": "*|public, max-age=31536000;js|no-cache"
+                        }
+                    }
+                },
+                {
+                    "apiVersion": "2015-04-01",
+                    "name": "connectionstrings",
+                    "type": "config",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', parameters('appName'))]",
+                        "[concat('Microsoft.Sql/servers/', parameters('dbServerName'), '/databases/', parameters('dbName'))]",
+                        "[concat('Microsoft.Web/Sites/', parameters('appName'), '/Extensions/MSDeploy')]"
+                    ],
+                    "properties": {
+                        "defaultConnection": {
+                            "value": "[concat('Data Source=tcp:', reference(concat('Microsoft.Sql/servers/', parameters('dbServerName'))).fullyQualifiedDomainName, ',1433;Initial Catalog=', parameters('dbName'), ';User Id=', parameters('dbAdministratorLogin'), '@', parameters('dbServerName'), ';Password=', parameters('dbAdministratorLoginPassword'), ';')]",
+                            "type": "SQLAzure"
+                        }
+                    }
+                },
+                {
+                    "apiVersion": "2014-06-01",
+                    "name": "web",
+                    "type": "config",
+                    "dependsOn": [
+                        "[concat('Microsoft.Web/Sites/', parameters('appName'))]"
+                    ],
+                    "properties": {
+                        "phpVersion": "off",
+                        "netFrameworkVersion": "v4.5",
+                        "use32BitWorkerProcess": "true",
+                        "webSocketsEnabled": true,
+                        "alwaysOn": "true",
+                        "httpLoggingEnabled": true,
+                        "logsDirectorySizeLimit": 40
+                    }
+                }
+            ]
         },
         {
             "apiVersion": "2014-04-01",
@@ -438,7 +505,75 @@
                 "name": "[variables('umbracoAdminWebAppName')]",
                 "serverFarmId": "[concat('/subscriptions/', subscription().subscriptionId,'/resourcegroups/',resourceGroup().name, '/providers/Microsoft.Web/serverfarms/', variables('appServicePlanName'))]",
                 "hostingEnvironment": ""
-            }
+            },
+            "resources": [
+                {
+                    "apiVersion": "2014-06-01",
+                    "name": "MSDeploy",
+                    "type": "Extensions",
+                    "dependsOn": [                        
+                        "[concat('Microsoft.Web/Sites/', variables('umbracoAdminWebAppName'))]",
+                        "[concat('Microsoft.Web/Sites/',variables('umbracoAdminWebAppName'), '/config/web')]",
+                        "[concat('Microsoft.Sql/servers/', parameters('dbServerName'), '/databases/', parameters('dbName'))]",
+                        "[concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName'))]"
+                    ],
+                    "properties": {
+                        "packageUri": "https://auxmktplceprod.blob.core.windows.net/packages/ScalableUmbracoCms.WebPI.7.4.3.zip",
+                        "dbType": "SQL",
+                        "connectionString": "[concat('Data Source=tcp:', reference(concat('Microsoft.Sql/servers/', parameters('dbServerName'))).fullyQualifiedDomainName, ',1433;Initial Catalog=', parameters('dbName'), ';User Id=', parameters('dbAdministratorLogin'), '@', parameters('dbServerName'), ';Password=', parameters('dbAdministratorLoginPassword'), ';')]",
+                        "setParameters": {
+                            "Application Path": "[variables('umbracoAdminWebAppName')]",
+                            "Database Server": "[reference(concat('Microsoft.Sql/servers/', parameters('dbServerName'))).fullyQualifiedDomainName]",
+                            "Database Name": "[parameters('dbName')]",
+                            "Database Username": "[concat(parameters('nonAdminDatabaseUsername'),'admin')]",
+                            "Database Password": "[parameters('nonAdminDatabasePassword')]",
+                            "Database Administrator": "[parameters('dbAdministratorLogin')]",
+                            "Database Administrator Password": "[parameters('dbAdministratorLoginPassword')]",
+                            "azurestoragerootUrl": "[concat('https://',variables('storageAccountName'), '.blob.core.windows.net')]",
+                            "azurestoragecontainerName": "media",
+                            "azurestorageconnectionString": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('storageAccountName'), ';AccountKey=' , listKeys(concat('Microsoft.Storage/storageAccounts/', variables('storageAccountName')), '2015-05-01-preview').key1 )]",
+                            "rediscachehost": "[concat(parameters('redisCacheName'), '.redis.cache.windows.net')]",
+                            "rediscacheport": "6379",
+                            "rediscacheaccessKey": "[listKeys(resourceId('Microsoft.Cache/Redis', parameters('redisCacheName')), '2014-04-01').primaryKey]",
+                            "azurestoragecacheControl": "*|public, max-age=31536000;js|no-cache"
+                        }
+                    }
+                },
+                {
+                    "apiVersion": "2015-04-01",
+                    "name": "connectionstrings",
+                    "type": "config",
+                    "dependsOn": [
+                        "[resourceId('Microsoft.Web/Sites', variables('umbracoAdminWebAppName'))]",
+                        "[concat('Microsoft.Sql/servers/', parameters('dbServerName'), '/databases/', parameters('dbName'))]",
+                        "[concat('Microsoft.Web/Sites/', variables('umbracoAdminWebAppName'), '/Extensions/MSDeploy')]"
+                        
+                    ],
+                    "properties": {
+                        "defaultConnection": {
+                            "value": "[concat('Data Source=tcp:', reference(concat('Microsoft.Sql/servers/', parameters('dbServerName'))).fullyQualifiedDomainName, ',1433;Initial Catalog=', parameters('dbName'), ';User Id=', parameters('dbAdministratorLogin'), '@', parameters('dbServerName'), ';Password=', parameters('dbAdministratorLoginPassword'), ';')]",
+                            "type": "SQLAzure"
+                        }
+                    }
+                },
+                {
+                    "apiVersion": "2014-06-01",
+                    "name": "web",
+                    "type": "config",
+                    "dependsOn": [
+                        "[concat('Microsoft.Web/Sites/', variables('umbracoAdminWebAppName'))]"
+                    ],
+                    "properties": {
+                        "phpVersion": "off",
+                        "netFrameworkVersion": "v4.5",
+                        "use32BitWorkerProcess": "true",
+                        "webSocketsEnabled": true,
+                        "alwaysOn": "true",
+                        "httpLoggingEnabled": true,
+                        "logsDirectorySizeLimit": 40
+                    }
+                }
+            ]
         }
     ]
 }
