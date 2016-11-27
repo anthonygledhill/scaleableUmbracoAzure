@@ -195,23 +195,6 @@
       }
     },
     {
-      "apiVersion": "2015-02-01",
-      "name": "[parameters('appName')]",
-      "type": "Microsoft.Web/Sites",
-      "location": "[resourceGroup().location]",
-      "tags": {
-        "[concat('hidden-related:', '/subscriptions/', subscription().subscriptionId,'/resourcegroups/', resourceGroup().name, '/providers/Microsoft.Web/serverfarms/', variables('appServicePlanName'))]": "empty"
-      },
-      "dependsOn": [
-        "[concat('Microsoft.Web/serverFarms/', variables('appServicePlanName'))]"
-      ],
-      "properties": {
-        "name": "[parameters('appName')]",
-        "serverFarmId": "[concat('/subscriptions/', subscription().subscriptionId,'/resourcegroups/',resourceGroup().id, '/providers/Microsoft.Web/serverfarms/', variables('appServicePlanName'))]",
-        "hostingEnvironment": ""
-      }
-    },
-    {
       "apiVersion": "2014-04-01",
       "name": "[concat(variables('appServicePlanName'), '-scaleset')]",
       "type": "microsoft.insights/autoscalesettings",
@@ -421,23 +404,6 @@
       ],
       "properties": {
         "applicationId": "[parameters('appName')]"
-      }
-    },
-    {
-      "apiVersion": "2015-02-01",
-      "name": "[variables('umbracoAdminWebAppName')]",
-      "type": "Microsoft.Web/Sites",
-      "location": "[resourceGroup().location]",
-      "tags": {
-        "[concat('hidden-related:', '/subscriptions/', subscription().subscriptionId,'/resourcegroups/', resourceGroup().name, '/providers/Microsoft.Web/serverfarms/', variables('appServicePlanName'))]": "empty"
-      },
-      "dependsOn": [
-        "[concat('Microsoft.Web/serverFarms/', variables('appServicePlanName'))]"
-      ],
-      "properties": {
-        "name": "[variables('umbracoAdminWebAppName')]",
-        "serverFarmId": "[concat('/subscriptions/', subscription().subscriptionId,'/resourcegroups/',resourceGroup().name, '/providers/Microsoft.Web/serverfarms/', variables('appServicePlanName'))]",
-        "hostingEnvironment": ""
       }
     }
   ]
